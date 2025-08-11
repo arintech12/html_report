@@ -1,7 +1,7 @@
 name: run-code-coverage
 on:
   push:
-    branches: ["test-2"]
+    branches: ["main"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -35,12 +35,28 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           cat coverage.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📁 **Current Report:** Available in \`coverage-reports-archive\` artifact" >> $GITHUB_STEP_SUMMARY
+          echo "## 📁 HTML Coverage Reports (Last 5 Runs):" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🌐 **All Reports:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "| Run # | Status | Download Link |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|---------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **#${{ github.run_number }}** | ✅ **Current** | [coverage-report-run-${{ github.run_number }}](#artifacts) |" >> $GITHUB_STEP_SUMMARY
+          
+          # Add previous runs (they may or may not exist)
+          if [ ${{ github.run_number }} -gt 1 ]; then
+            echo "| #${{ env.PREV_RUN_1 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_1 }}](../../actions/runs/$((${{ github.run_number }} - 1))) |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ ${{ github.run_number }} -gt 2 ]; then
+            echo "| #${{ env.PREV_RUN_2 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_2 }}](../../actions/runs/$((${{ github.run_number }} - 2))) |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ ${{ github.run_number }} -gt 3 ]; then
+            echo "| #${{ env.PREV_RUN_3 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_3 }}](../../actions/runs/$((${{ github.run_number }} - 3))) |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ ${{ github.run_number }} -gt 4 ]; then
+            echo "| #${{ env.PREV_RUN_4 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_4 }}](../../actions/runs/$((${{ github.run_number }} - 4))) |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📈 **Last 5 Reports Available:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Run #${{ github.run_number }} (Current)" >> $GITHUB_STEP_SUMMARY
+          echo "💡 **How to access:** Click on any run number above → Scroll to Artifacts section → Download the coverage report" >> $GITHUB_STEP_SUMMARY
       
       - name: create timestamped report
         run: |
