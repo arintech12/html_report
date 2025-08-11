@@ -1,7 +1,7 @@
 name: run-code-coverage
 on:
   push:
-    branches: ["main"]
+    branches: ["test"]
   workflow_dispatch:
 permissions:
   contents: read
