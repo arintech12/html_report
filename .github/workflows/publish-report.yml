@@ -1,23 +1,12 @@
 name: run-code-coverage
 on:
   push:
-    branches: ["main"]
+    branches: ["test-2"]
   workflow_dispatch:
-
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   run-code-coverage:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }} 
     runs-on: ubuntu-latest
     steps:
       - name: checkout repo
@@ -37,13 +26,19 @@ jobs:
       - name: run coverage
         run: |
           coverage run -m test
+          coverage report --format=markdown > coverage.md
           coverage html --omit='.venv/*'
       
-      - name: upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with: 
-          path: './htmlcov/'
+      - name: add coverage to summary
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat coverage.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📁 **Detailed HTML report available in artifacts below**" >> $GITHUB_STEP_SUMMARY
       
-      - name: deploy to Github Pages
-        uses: actions/deploy-pages@v4
-        id: deployment
+      - name: upload coverage html report
+        uses: actions/upload-artifact@v4
+        with: 
+          name: coverage-html-report
+          path: htmlcov/
