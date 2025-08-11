@@ -47,11 +47,11 @@ jobs:
         uses: actions/deploy-pages@v4
         id: deployment
       
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-reports
-          path: |
-            coverage.xml
-            coverage.json
-            htmlcov/
+      # - name: Upload coverage reports
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: coverage-reports
+      #     path: |
+      #       coverage.xml
+      #       coverage.json
+      #       htmlcov/
