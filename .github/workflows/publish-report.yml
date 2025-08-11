@@ -4,7 +4,7 @@ on:
     branches: ["test-2"]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   run-code-coverage:
     runs-on: ubuntu-latest
@@ -35,13 +35,72 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           cat coverage.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📁 **HTML Report:** \`coverage-html-report-${{ github.run_number }}-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "📁 **Current Report:** Available in \`coverage-reports-archive\` artifact" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 **View Previous Reports:** [Actions Tab](https://github.com/${{ github.repository }}/actions)" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **All Reports:** https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📈 **Last 5 Reports Available:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Run #${{ github.run_number }} (Current)" >> $GITHUB_STEP_SUMMARY
       
-      - name: upload coverage html report
+      - name: create timestamped report
+        run: |
+          # Create a timestamped directory structure
+          mkdir -p reports/run-${{ github.run_number }}
+          cp -r htmlcov/* reports/run-${{ github.run_number }}/
+          
+          # Create an index file listing all reports
+          echo "# Coverage Reports Archive" > reports/README.md
+          echo "" >> reports/README.md
+          echo "## Run #${{ github.run_number }} - $(date)" >> reports/README.md
+          echo "- [View Report](run-${{ github.run_number }}/index.html)" >> reports/README.md
+      
+      - name: checkout existing reports
+        uses: actions/checkout@v4
+        with:
+          ref: coverage-reports
+          path: existing-reports
+        continue-on-error: true
+      
+      - name: merge with existing reports
+        run: |
+          # Create coverage-reports directory
+          mkdir -p coverage-reports
+          
+          # Copy existing reports if they exist
+          if [ -d "existing-reports" ]; then
+            cp -r existing-reports/* coverage-reports/ 2>/dev/null || true
+          fi
+          
+          # Add new report
+          mkdir -p coverage-reports/run-${{ github.run_number }}
+          cp -r htmlcov/* coverage-reports/run-${{ github.run_number }}/
+          
+          # Keep only last 5 reports
+          cd coverage-reports
+          ls -d run-* | sort -V | head -n -5 | xargs -r rm -rf
+          
+          # Update index
+          echo "# Coverage Reports Archive" > index.html
+          echo "<h1>Coverage Reports Archive</h1>" >> index.html
+          echo "<ul>" >> index.html
+          for dir in $(ls -d run-* | sort -Vr); do
+            run_num=$(echo $dir | sed 's/run-//')
+            echo "<li><a href=\"$dir/index.html\">Run #$run_num Coverage Report</a></li>" >> index.html
+          done
+          echo "</ul>" >> index.html
+      
+      - name: upload merged reports
         uses: actions/upload-artifact@v4
         with: 
-          name: coverage-html-report-${{ github.run_number }}-${{ github.sha }}
-          path: htmlcov/
-          retention-days: 30
+          name: coverage-reports-archive
+          path: coverage-reports/
+          retention-days: 90
+      
+      - name: deploy to coverage-reports branch
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: coverage-reports
+          publish_branch: coverage-reports
+          force_orphan: true
