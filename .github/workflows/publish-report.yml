@@ -1,4 +1,4 @@
-name: Publish HTML Report
+name: Publish HTML Report 
 
 on:
   push:
