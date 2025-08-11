@@ -31,14 +31,17 @@ jobs:
       
       - name: add coverage to summary
         run: |
-          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Coverage Report - Run #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat coverage.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📁 **Detailed HTML report available in artifacts below**" >> $GITHUB_STEP_SUMMARY
+          echo "📁 **HTML Report:** \`coverage-html-report-${{ github.run_number }}-${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **View Previous Reports:** [Actions Tab](https://github.com/${{ github.repository }}/actions)" >> $GITHUB_STEP_SUMMARY
       
       - name: upload coverage html report
         uses: actions/upload-artifact@v4
         with: 
-          name: coverage-html-report
+          name: coverage-html-report-${{ github.run_number }}-${{ github.sha }}
           path: htmlcov/
+          retention-days: 30
