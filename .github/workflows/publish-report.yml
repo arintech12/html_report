@@ -36,11 +36,8 @@ jobs:
       
       - name: run coverage
         run: |
-          coverage run -m pytest
+          coverage run -m test
           coverage html --omit='.venv/*'
-      
-      - name: setup pages
-        uses: actions/configure-pages@v4
       
       - name: upload artifact
         uses: actions/upload-pages-artifact@v3
