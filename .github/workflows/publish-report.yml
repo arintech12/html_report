@@ -31,6 +31,12 @@ jobs:
       
       - name: add coverage to summary
         run: |
+          # Calculate previous run numbers
+          PREV_RUN_1=$((${{ github.run_number }} - 1))
+          PREV_RUN_2=$((${{ github.run_number }} - 2))
+          PREV_RUN_3=$((${{ github.run_number }} - 3))
+          PREV_RUN_4=$((${{ github.run_number }} - 4))
+          
           echo "## 📊 Coverage Report - Run #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat coverage.md >> $GITHUB_STEP_SUMMARY
@@ -39,20 +45,20 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Run # | Status | Download Link |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|---------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **#${{ github.run_number }}** | ✅ **Current** | [coverage-report-run-${{ github.run_number }}](#artifacts) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **#${{ github.run_number }}** | ✅ **Current** | [coverage-report-run-${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
           
           # Add previous runs (they may or may not exist)
           if [ ${{ github.run_number }} -gt 1 ]; then
-            echo "| #${{ env.PREV_RUN_1 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_1 }}](../../actions/runs/$((${{ github.run_number }} - 1))) |" >> $GITHUB_STEP_SUMMARY
+            echo "| #$PREV_RUN_1 | ⏳ Previous | [coverage-report-run-$PREV_RUN_1](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id - 1 }}) |" >> $GITHUB_STEP_SUMMARY
           fi
           if [ ${{ github.run_number }} -gt 2 ]; then
-            echo "| #${{ env.PREV_RUN_2 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_2 }}](../../actions/runs/$((${{ github.run_number }} - 2))) |" >> $GITHUB_STEP_SUMMARY
+            echo "| #$PREV_RUN_2 | ⏳ Previous | [coverage-report-run-$PREV_RUN_2](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id - 2 }}) |" >> $GITHUB_STEP_SUMMARY
           fi
           if [ ${{ github.run_number }} -gt 3 ]; then
-            echo "| #${{ env.PREV_RUN_3 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_3 }}](../../actions/runs/$((${{ github.run_number }} - 3))) |" >> $GITHUB_STEP_SUMMARY
+            echo "| #$PREV_RUN_3 | ⏳ Previous | [coverage-report-run-$PREV_RUN_3](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id - 3 }}) |" >> $GITHUB_STEP_SUMMARY
           fi
           if [ ${{ github.run_number }} -gt 4 ]; then
-            echo "| #${{ env.PREV_RUN_4 }} | ⏳ Previous | [coverage-report-run-${{ env.PREV_RUN_4 }}](../../actions/runs/$((${{ github.run_number }} - 4))) |" >> $GITHUB_STEP_SUMMARY
+            echo "| #$PREV_RUN_4 | ⏳ Previous | [coverage-report-run-$PREV_RUN_4](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id - 4 }}) |" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -63,12 +69,13 @@ jobs:
           # Create a timestamped directory structure
           mkdir -p reports/run-${{ github.run_number }}
           cp -r htmlcov/* reports/run-${{ github.run_number }}/
-          
-          # Create an index file listing all reports
-          echo "# Coverage Reports Archive" > reports/README.md
-          echo "" >> reports/README.md
-          echo "## Run #${{ github.run_number }} - $(date)" >> reports/README.md
-          echo "- [View Report](run-${{ github.run_number }}/index.html)" >> reports/README.md
+      
+      - name: upload current report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-run-${{ github.run_number }}
+          path: htmlcov/
+          retention-days: 90
       
       - name: checkout existing reports
         uses: actions/checkout@v4
