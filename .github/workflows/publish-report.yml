@@ -3,16 +3,13 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: false
-
 jobs:
   run-code-coverage:
     environment:
@@ -34,9 +31,11 @@ jobs:
           pip install coverage
           pip install urllib3
       
-      - name: run coverage
+      - name: run coverage with multiple reports
         run: |
           coverage run -m test
+          coverage xml -o coverage.xml
+          coverage json -o coverage.json
           coverage html --omit='.venv/*'
       
       - name: upload artifact
@@ -47,3 +46,12 @@ jobs:
       - name: deploy to Github Pages
         uses: actions/deploy-pages@v4
         id: deployment
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            coverage.json
+            htmlcov/
